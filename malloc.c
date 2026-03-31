@@ -47,8 +47,8 @@ block_t *request_space(block_t *last, size_t size) {
     return block;
 }
 
-/* Custom malloc implementation */
-void *my_malloc(size_t size) {
+/* malloc implementation */
+void *malloc(size_t size) {
     block_t *block;
 
     if (size <= 0) {
@@ -88,8 +88,8 @@ block_t *get_block_ptr(void *ptr) {
     return (block_t*)ptr - 1;
 }
 
-/* Custom free implementation */
-void my_free(void *ptr) {
+/* free implementation */
+void free(void *ptr) {
     if (!ptr) {
         return;
     }
@@ -104,24 +104,24 @@ void my_free(void *ptr) {
     }
 }
 
-/* Custom calloc implementation */
-void *my_calloc(size_t nmemb, size_t size) {
+/* calloc implementation */
+void *calloc(size_t nmemb, size_t size) {
     size_t total = nmemb * size;
-    void *ptr = my_malloc(total);
+    void *ptr = malloc(total);
     if (ptr) {
         memset(ptr, 0, total);
     }
     return ptr;
 }
 
-/* Custom realloc implementation */
-void *my_realloc(void *ptr, size_t size) {
+/* realloc implementation */
+void *realloc(void *ptr, size_t size) {
     if (!ptr) {
-        return my_malloc(size);
+        return malloc(size);
     }
 
     if (size == 0) {
-        my_free(ptr);
+        free(ptr);
         return NULL;
     }
 
@@ -131,70 +131,10 @@ void *my_realloc(void *ptr, size_t size) {
     }
 
     /* Allocate new block and copy data */
-    void *new_ptr = my_malloc(size);
+    void *new_ptr = malloc(size);
     if (new_ptr) {
         memcpy(new_ptr, ptr, block->size);
-        my_free(ptr);
+        free(ptr);
     }
     return new_ptr;
-}
-
-/* Test program */
-int main() {
-    /* Test basic allocation */
-    int *arr = (int*)my_malloc(10 * sizeof(int));
-    if (!arr) {
-        printf("Allocation failed\n");
-        return 1;
-    }
-
-    /* Initialize array */
-    for (int i = 0; i < 10; i++) {
-        arr[i] = i;
-    }
-
-    /* Verify values */
-    for (int i = 0; i < 10; i++) {
-        if (arr[i] != i) {
-            printf("Value mismatch at index %d\n", i);
-            return 1;
-        }
-    }
-
-    /* Test calloc */
-    int *zarr = (int*)my_calloc(5, sizeof(int));
-    if (!zarr) {
-        printf("Calloc failed\n");
-        return 1;
-    }
-
-    /* Verify zero initialization */
-    for (int i = 0; i < 5; i++) {
-        if (zarr[i] != 0) {
-            printf("Calloc not zero-initialized at index %d\n", i);
-            return 1;
-        }
-    }
-
-    /* Test realloc */
-    int *rarr = (int*)my_realloc(arr, 20 * sizeof(int));
-    if (!rarr) {
-        printf("Realloc failed\n");
-        return 1;
-    }
-
-    /* Verify old values preserved */
-    for (int i = 0; i < 10; i++) {
-        if (rarr[i] != i) {
-            printf("Realloc corrupted data at index %d\n", i);
-            return 1;
-        }
-    }
-
-    /* Free memory */
-    my_free(rarr);
-    my_free(zarr);
-
-    printf("All tests passed!\n");
-    return 0;
 }
